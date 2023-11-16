@@ -1,0 +1,42 @@
+{
+  "size": 0,
+  "query": {
+    "bool": {
+      "filter": [],
+      "minimum_should_match": 1,
+      "should": [
+        {"term": {"url.path": "/working/path"}},
+        {"term": {"url.path": "/broken/path/1"}},
+        {"term": {"url.path": "/broken/path/2"}}
+      ]              
+    }
+  },
+  "aggs": {
+    "timestamp": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "fixed_interval": "1m",
+        "format": "yyyy-MM-dd'T'HH:mm"
+      },
+      "aggs": {
+        "url_path": {
+          "terms": {
+            "field": "url.path"
+          },
+          "aggs": {
+            "error5xx": {
+              "filter": {
+                "range": {
+                  "http.response.status_code": {
+                    "gte": 500,
+                    "lt": 600
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

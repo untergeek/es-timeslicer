@@ -1,0 +1,16 @@
+"""Iterate over aggregation results"""
+def iterate_aggs(result, index):
+    """Iterate over the aggregation results and do what I want with it"""
+    documents = []
+    for bucket in result['aggregations']['timestamp']['buckets']:
+        for subbucket in bucket['url_path']['buckets']:
+            document = {'_index': index}
+            document['@timestamp'] = bucket['key_as_string']
+            document['url_path'] = subbucket['key']
+            document['total_visits'] = subbucket['doc_count']
+            document['error5xx_visits'] = subbucket['error5xx']['doc_count']
+            down = float(subbucket['error5xx']['doc_count']/subbucket['doc_count'] * 100)
+            document['outage'] = down > 0.9
+            document['downtime_percentage'] = down
+            documents.append(document)
+    return documents
