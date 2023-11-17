@@ -46,6 +46,7 @@ def query(
     try:
         tslicer.loop_query()
     except Exception as exc:
+        LOGGER.critical('Error encountered during execution: %s', exc)
         LOGGER.critical('Unable to continue. Exiting.')
         raise FatalException from exc
 

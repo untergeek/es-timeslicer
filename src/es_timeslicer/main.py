@@ -92,6 +92,16 @@ class TimeSlicer:
     def loop_query(self):
         """Loop the query"""
         request = self.get_query()
+        self.logger.debug('Loading agg function from file.')
+        try:
+            gvars = {'__builtins__': {'float': float}}
+            lvars = {}
+            agg_function = load_function(
+                self.params['agg_function'], global_vars=gvars, local_vars=lvars)
+        except Exception as exc:
+            self.logger.error('Unable to load agg_function: %s', self.params['agg_function'])
+            self.logger.critical('Error: %s', exc)
+            raise FatalException from exc
         while self.range_start_dt < self.end_dt:
             begin, end = self.get_rangevals()
             self.logger.debug('Timeslice: BEGIN: %s, END: %s', begin, end)
@@ -114,10 +124,6 @@ class TimeSlicer:
             if self.trace:
                 msg = f'TRACE: RESULT: \n{json.dumps(dict(result), indent=2)}'
                 self.logger.debug(msg)
-            gvars = {'__builtins__': {'float': float}}
-            lvars = {}
-            agg_function = load_function(
-                self.params['agg_function'], global_vars=gvars, local_vars=lvars)
             try:
                 documents = agg_function(
                                 result, self.params['write_index'], self.params['pipeline'])

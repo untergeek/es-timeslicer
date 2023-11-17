@@ -1,1 +1,2 @@
-__version__ = "0.0.2"
+"""Version tracking"""
+__version__ = "0.0.3"
