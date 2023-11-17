@@ -1,10 +1,12 @@
 """Iterate over aggregation results"""
-def iterate_aggs(result, index):
+def iterate_aggs(result, index, pipeline=None):
     """Iterate over the aggregation results and do what I want with it"""
     documents = []
     for bucket in result['aggregations']['timestamp']['buckets']:
         for subbucket in bucket['url_path']['buckets']:
             document = {'_index': index}
+            if pipeline:
+                document['pipeline'] = pipeline
             document['@timestamp'] = bucket['key_as_string']
             document['url_path'] = subbucket['key']
             document['total_visits'] = subbucket['doc_count']

@@ -6,15 +6,15 @@ import json
 from datetime import datetime as pydate
 from datetime import timedelta
 from click import secho
-from elasticsearch8.helpers import bulk
+from elasticsearch8.helpers import bulk, BulkIndexError
 from es_client.helpers.utils import prune_nones
 from es_timeslicer.helpers.client import get_args, get_client
 from es_timeslicer.helpers import utils
 from es_timeslicer.exceptions import ConfigurationException, FatalException, MissingArgument
 
 ARGS = [
-    'read_index', 'write_index', 'field', 'start_time', 'end_time', 'increment', 'agg_function',
-    'query_file', 'trace'
+    'read_index', 'write_index', 'pipeline', 'field', 'start_time', 'end_time', 'increment',
+    'agg_function', 'query_file', 'trace'
 ]
 
 def load_function(filename, global_vars=None, local_vars=None):
@@ -115,11 +115,12 @@ class TimeSlicer:
                 msg = f'TRACE: RESULT: \n{json.dumps(dict(result), indent=2)}'
                 self.logger.debug(msg)
             gvars = {'__builtins__': {'float': float}}
-            lvars = {'result': result, 'index': self.params['write_index']}
+            lvars = {}
             agg_function = load_function(
                 self.params['agg_function'], global_vars=gvars, local_vars=lvars)
             try:
-                documents = agg_function(result, self.params['write_index'])
+                documents = agg_function(
+                                result, self.params['write_index'], self.params['pipeline'])
             except Exception as exc:
                 msg = f'Error executing function "{self.params["agg_function"]}": Error: {exc}'
                 self.logger.critical(msg)
@@ -132,7 +133,19 @@ class TimeSlicer:
                     sys.exit(0)
                 else:
                     self.logger.debug('Bulk-writing documents to %s', self.params['write_index'])
-                    bulk(self.client, self.bulk_generator(documents))
+                    try:
+                        bulk(
+                            self.client,
+                            self.bulk_generator(documents),
+                            max_retries=10,
+                            initial_backoff=1
+                        )
+                    except BulkIndexError as bie:
+                        msg = f'Bulk indexing encountered one or more errors: \n{bie.errors}'
+                        self.logger.error(msg)
+                    except Exception as exc:
+                        self.logger.error('Exception encountered during bulk write to ES: %s', exc)
+                        raise FatalException from exc
             else:
                 self.logger.debug('No documents found in this time slice. Continuing...')
             # After successful iteration, update range_start_dt:
