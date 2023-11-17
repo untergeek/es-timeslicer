@@ -27,6 +27,8 @@ CLI_OPTIONS = {
     'show_hidden': {'help': 'Show all options', 'is_flag': True, 'default': False},
     'read_index': {'help': 'The index to query', 'required': True},
     'write_index': {'help': 'The target index', 'required': True},
+    'pipeline': {
+        'help': 'Send to the named pipeline', 'type': str, 'required': False, 'default': None},
     'field': {'help': 'The timestamp field name', 'default': '@timestamp', 'show_default': True},
     'start_time': {
         'help': 'The ISO8601 formatted date closest to now (newest) of your date range',

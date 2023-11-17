@@ -12,6 +12,8 @@
 
 ## Installation
 
+**NOTE** When this is published to PyPI, this will work. It's currently in pre-release.
+
 ```console
 pip install es-timeslicer
 ```

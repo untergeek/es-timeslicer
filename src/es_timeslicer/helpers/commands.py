@@ -23,6 +23,7 @@ def override_filepath():
 @click.command(context_settings=get_context_settings(), epilog=EPILOG)
 @click_opt_wrap(*cli_opts('read_index'))
 @click_opt_wrap(*cli_opts('write_index'))
+@click_opt_wrap(*cli_opts('pipeline'))
 @click_opt_wrap(*cli_opts('field'))
 @click_opt_wrap(*cli_opts('start_time'))
 @click_opt_wrap(*cli_opts('end_time'))
@@ -33,7 +34,7 @@ def override_filepath():
 @click.argument('query_file', type=str, nargs=1)
 @click.pass_context
 def query(
-    ctx, read_index, write_index, field, start_time, end_time, increment, agg_function,
+    ctx, read_index, write_index, pipeline, field, start_time, end_time, increment, agg_function,
     dry_run, trace, query_file):
     """
     Repeatedly execute the query in QUERY_FILE using the defined parameters.
